@@ -1,9 +1,10 @@
 """Teste opt-in: só envia as frases sintéticas abaixo à instância Vipernet."""
 import json
-from test_plugin import load, tool
+import os
+from test_plugin import tool
 
 if __name__ == '__main__':
-    f = tool(load().BASE_URL)['handler']
+    f = tool(os.environ['LT_BASE_URL'])['handler']
     for language, bad, good, replacement in [
         (None, 'Comprei bilhetes para a secção de cinema das nove.', 'Comprei bilhetes para a sessão de cinema das nove.', 'sessão'),
         ('en-US','This is an test.','This is a test.','a'),

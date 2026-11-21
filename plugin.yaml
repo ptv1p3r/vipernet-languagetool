@@ -1,0 +1,12 @@
+manifest_version: 2
+name: vipernet-languagetool
+version: 1.0.0
+description: Sugestões de revisão linguística a pedido, sem alterar o texto.
+author: Vipernet
+provides_tools: [rever_texto]
+config_schema:
+  base_url:
+    type: str
+    label: Servidor LanguageTool
+    description: Origem HTTP ou HTTPS da API, sem /v2/check, credenciais, query ou fragmento.
+    default: http://192.168.2.37:8010

@@ -1,0 +1,16 @@
+name: vipernet-languagetool
+repo: https://github.com/ptv1p3r/vipernet-languagetool.git
+sha: "9c150d459fe38540c18a88a09d306a4e1a7710eb"
+version: "1.1.1"
+requires_hermes: ">=0.23.3"
+tier: community
+category: tools
+maintainer: ptv1p3r
+title: Vipernet LanguageTool
+description: Revê texto a pedido em português de Portugal e inglês através de um servidor LanguageTool escolhido pelo utilizador. Devolve sugestões sem alterar o original.
+readme: true
+capabilities:
+  provides_tools: [rever_texto]
+  provides_hooks: []
+  provides_middleware: []
+  requires_env: []

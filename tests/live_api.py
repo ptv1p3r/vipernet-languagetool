@@ -6,7 +6,7 @@ from test_plugin import tool
 if __name__ == '__main__':
     f = tool(os.environ['LT_BASE_URL'])['handler']
     for language, bad, good, replacement in [
-        (None, 'Comprei bilhetes para a secção de cinema das nove.', 'Comprei bilhetes para a sessão de cinema das nove.', 'sessão'),
+        (None, 'Eu fui á escola.', 'Eu fui à escola.', 'à'),
         ('en-US','This is an test.','This is a test.','a'),
         ('en-GB','This is an test.','This is a test.','a'),
     ]:

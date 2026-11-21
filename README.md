@@ -1,40 +1,30 @@
-# vipernet-languagetool
+# Vipernet LanguageTool
 
-`rever_texto` pede sugestões ao LanguageTool quando o utilizador pede revisão linguística. Não observa conversas, não interceta respostas nem edita o original. Exemplo: «Revê esta frase em inglês britânico: This is an test.» A ferramenta recebe `{"texto":"This is an test.","idioma":"en-GB"}` e sugere «a» em vez de «an».
+Pede ao Hermes «Revê esta frase: Eu fui á escola». A ferramenta `rever_texto` envia o texto à tua instância do LanguageTool e apresenta os excertos assinalados com sugestões. Não altera o original. Usa português de Portugal por omissão; também aceita inglês britânico e americano (`en-GB`, `en-US`).
 
-Se não indicares um idioma, usa `pt-PT`. Também aceita `en-US` e `en-GB`. Em documentos mistos, o agente deve enviar só os parágrafos de prosa e excluir código, comandos, URLs, caminhos, identificadores, citações literais e segredos. Esta seleção é uma instrução ao agente, não um filtro infalível: a ferramenta envia o argumento `texto` tal como o recebe.
+## Instalação e configuração
 
-## Instalação manual posterior
+Precisas do Hermes 0.23.3 ou posterior e de um servidor LanguageTool acessível a partir do Hermes. O plugin não inclui o servidor. Enquanto não estiver no catálogo, instala pelo URL do repositório público, escolhendo o commit que queres instalar com `--ref`:
 
-No contentor Hermes, a partir da pasta desta entrega, executar **apenas quando se pretender instalar**:
-
-```sh
-P=/opt/data/profiles/pessoal
-D="$P/plugins/vipernet-languagetool"
-mkdir "$D" && cp __init__.py plugin.yaml README.md "$D/" && \
-  hermes -p pessoal config set plugins.entries.vipernet-languagetool.settings.base_url http://192.168.2.37:8010 && \
-  hermes -p pessoal plugins enable vipernet-languagetool
+```
+hermes plugins install https://github.com/ptv1p3r/vipernet-languagetool --ref <SHA-completo> --no-enable
+hermes config set plugins.entries.vipernet-languagetool.settings.base_url http://127.0.0.1:8010
+hermes plugins enable vipernet-languagetool
 ```
 
-O `mkdir` sem `-p` impede a substituição de uma instalação existente. Neste ambiente, `pessoal/plugins` aponta à pasta partilhada: os ficheiros ficam visíveis aos outros perfis, mas este comando só pede ativação no `pessoal`. Abrir uma sessão nova no perfil depois de o gateway carregar a ativação. Para desativar: `hermes -p pessoal plugins disable vipernet-languagetool`.
+Abre uma nova sessão. Substitui o endereço pelo do teu servidor, sem `/v2/check`. Se o Hermes correr num contentor, `127.0.0.1` aponta para o próprio contentor. Para desativar usa `hermes plugins disable vipernet-languagetool` no mesmo perfil.
 
-O exemplo em `config.example.yaml` mostra a chave do perfil; não substituas o `config.yaml` por esse excerto. Para mudar de servidor, repetir `config set` com a nova origem HTTP(S), sem caminho, credenciais, query ou fragmento. O plugin consulta essa chave em cada chamada. Se a chave não existir, pede que configures `base_url` e não envia o texto. O modelo não pode fornecer outro destino como argumento.
+## Dados e permissões
 
-## Dados e limites
+Cada chamada envia `texto` e `idioma` num único POST para `/v2/check`. O destino vem da configuração do perfil, nunca dos argumentos da ferramenta. Sem endereço não há envio. Usa HTTPS fora de uma rede de confiança. A ferramenta não segue redirecionamentos, não usa proxies do ambiente e não repete pedidos. Não precisa de credenciais, não lê documentos, não escreve ficheiros nem registos, não executa comandos e não tem telemetria nem tarefas em segundo plano. A retenção pelo Hermes e pelo servidor é independente do plugin. O agente deve excluir citações, código e segredos; o plugin não anonimiza o texto que recebe.
 
-O plugin envia um único `POST /v2/check` diretamente ao servidor configurado; não segue redirecionamentos, não usa proxies do ambiente e não faz novas tentativas. O endereço fornecido usa HTTP sem cifra: só deve ser usado numa rede de confiança. O plugin não escreve ficheiros, logs, histórico ou cache, não executa subprocessos e não precisa de credenciais nem dependências externas. A conversa e os argumentos das ferramentas podem ficar no histórico do Hermes; a retenção do servidor LanguageTool também é independente deste plugin.
+## Resultados e testes
 
-Cada pedido admite até 10 000 caracteres. A resposta inclui o idioma, o total de alertas e, para os primeiros 50, posição e comprimento nativos do LanguageTool (unidades UTF-16), regra, excerto original, mensagem e até cinco alternativas. `estado` distingue revisão concluída de revisão incompleta, mesmo sem alertas. Não devolve a frase de contexto nem um documento corrigido. `truncado` indica omissão de alertas; zero alertas não certifica o texto. O timeout de socket é de 10 segundos e a resposta HTTP está limitada a 1 MiB. Um erro devolve `error`, nunca uma revisão vazia.
+Aceita até 10 000 caracteres por pedido e devolve até 50 alertas, com excerto, posição em UTF-16 e até cinco alternativas. `estado` distingue uma revisão incompleta de uma revisão concluída; `truncado` indica que há alertas omitidos. Um erro de ligação não conta como revisão sem alertas.
 
-## Repetir os testes sem instalar
-
-Na pasta desta entrega:
-
-```sh
+```
 python3 -B -m unittest discover -s tests -v
-hermes plugins doctor "$PWD" --ci
-hermes plugins validate "$PWD" --json
-LT_BASE_URL=http://192.168.2.37:8010 python3 -B tests/live_api.py
+hermes plugins validate "$PWD" --install-deps
 ```
 
-Os testes unitários usam um servidor em loopback. Só o último comando envia frases sintéticas à instância Vipernet: para cada idioma, exige a sugestão esperada na frase com erro e zero alertas na frase correta. O caso português também verifica o comportamento da regra local de cinema.
+Opcional: define `LT_BASE_URL` e executa `python3 -B tests/live_api.py` para verificar três pares de frases sintéticas no teu servidor. Não requer regras personalizadas. O funcionamento não depende de bibliotecas Python de terceiros. Licença: MIT ou Apache-2.0, à escolha.
